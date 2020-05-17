@@ -1,4 +1,4 @@
-(torch) ➜  project1 git:(master) ✗ time python test.py --model Classification
+(torch) ➜  project1 git:(master) ✗ time python test.py --model DirectClassification
 Estimated using 10 independent rounds:
 Train accuracy: mean=0.9745000004768372, std=0.011443085968494415
 Test accuracy: mean=0.9649999737739563, std=0.006765933707356453
