@@ -1,0 +1,42 @@
+(torch) ➜  project1 git:(master) ✗ time python test.py --model Classification
+Estimated using 10 independent rounds:
+Train accuracy: mean=0.9745000004768372, std=0.011443085968494415
+Test accuracy: mean=0.9649999737739563, std=0.006765933707356453
+python test.py --model Classification  487,30s user 258,94s system 659% cpu 1:53,11 total
+
+(torch) ➜  project1 git:(master) ✗ time python test.py --model TwoChannel
+Estimated using 10 independent rounds:
+Train accuracy: mean=0.9550999402999878, std=0.01223338395357132
+Test accuracy: mean=0.7979000210762024, std=0.010671352967619896
+python test.py --model TwoChannel  337,45s user 199,17s system 665% cpu 1:20,69 total
+
+(torch) ➜  project1 git:(master) ✗ time python test.py --model TwoBranch
+Estimated using 10 independent rounds:
+Train accuracy: mean=0.9595999717712402, std=0.009912957437336445
+Test accuracy: mean=0.8116000294685364, std=0.013040103949606419
+python test.py --model TwoBranch  689,20s user 408,83s system 665% cpu 2:45,10 total
+
+(torch) ➜  project1 git:(master) ✗ time python test.py --model TwoBranchWeightSharing
+Estimated using 10 independent rounds:
+Train accuracy: mean=0.9634000658988953, std=0.006963401101529598
+Test accuracy: mean=0.8378000259399414, std=0.011535444296896458
+python test.py --model TwoBranchWeightSharing  603,96s user 338,15s system 664% cpu 2:21,69 total
+
+(torch) ➜  project1 git:(master) ✗ time python test.py --model TwoBranchSecond
+Estimated using 10 independent rounds:
+Train accuracy: mean=0.9553999900817871, std=0.012980323284864426
+Test accuracy: mean=0.8269000053405762, std=0.011656654998660088
+python test.py --model TwoBranchSecond  817,37s user 472,86s system 677% cpu 3:10,45 total
+
+(torch) ➜  project1 git:(master) ✗ time python test.py --model TwoBranchSecondWeightSharing
+Estimated using 10 independent rounds:
+Train accuracy: mean=0.961400032043457, std=0.014728652313351631
+Test accuracy: mean=0.8472000360488892, std=0.01755499094724655
+python test.py --model TwoBranchSecondWeightSharing  660,86s user 385,56s system 657% cpu 2:39,04 total
+
+(torch) ➜  project1 git:(master) ✗ time python test.py --model TwoBranchSecondWeightSharingAuxiliaryLoss
+Estimated using 10 independent rounds:
+Train accuracy: mean=0.9637999534606934, std=0.007771747186779976
+Test accuracy: mean=0.8651000261306763, std=0.018543940037488937
+python test.py --model TwoBranchSecondWeightSharingAuxiliaryLoss  1151,01s user 665,39s system 670% cpu 4:30,94 total
+
