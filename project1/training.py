@@ -2,7 +2,7 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 from torch.utils.data import DataLoader
-from metrics import compute_accuracy, compute_accuracy_classification
+from metrics_drop import compute_accuracy, compute_accuracy_classification
 from utils import EarlyStopping
 
 
