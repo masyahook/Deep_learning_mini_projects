@@ -1,9 +1,9 @@
 import argparse
 import torch
 from torch.utils.data import TensorDataset
-from models import *
+from models_drop import *
 from training import *
-from metrics import *
+from metrics_drop import *
 from dlc_practical_prologue import generate_pair_sets
 
 def parse_args():
