@@ -3,16 +3,31 @@ from torch import nn
 from torch.nn import functional as F
 
 
-class TwoChannel(nn.Module):
+class TwoChannelsModel(nn.Module):
     def __init__(self, nb_hidden=128):
-        super(TwoChannel, self).__init__()
-        self.conv1 = nn.Conv2d(2, 32, kernel_size=5)
-        self.conv2 = nn.Conv2d(32, 64, kernel_size=2)
+        super(TwoChannelsModel, self).__init__()
+        self.conv1 = nn.Conv2d(2, 32, kernel_size=3)
+        self.conv2 = nn.Conv2d(32, 64, kernel_size=3)
         self.fc1 = nn.Linear(256, nb_hidden)
         self.fc2 = nn.Linear(nb_hidden, 10)
         self.fc3 = nn.Linear(10, 1)
 
     def forward(self, x):
+        """
+            Defines a PyTorch convolutional classification network model.
+
+            Parameters
+            ----------
+            self : 
+                The class instance
+            x    :
+                The input of dimension [mini_batch_size, 2, 14, 14]
+
+            Returns
+            -------
+
+            x    : A Tensor of dimension [mini_batch_size] with the prediction values.
+        """
         x = F.relu(F.max_pool2d(self.conv1(x), kernel_size=2))
         x = F.relu(F.max_pool2d(self.conv2(x), kernel_size=2))
         x = x.view(x.size(0), -1)
@@ -23,9 +38,9 @@ class TwoChannel(nn.Module):
         return x
 
 
-class TwoBranch(nn.Module):
+class TwoBranchesModel(nn.Module):
     def __init__(self, nb_hidden=128):
-        super(TwoBranch, self).__init__()
+        super(TwoBranchesModel, self).__init__()
 
         # Convolutional layers on the first branch
         self.cnn_first = nn.Sequential(
@@ -53,10 +68,10 @@ class TwoBranch(nn.Module):
         # Convolutional layers on the second branch
         self.cnn_second = nn.Sequential(
 
-            nn.Conv2d(1, 32, kernel_size=5),
+            nn.Conv2d(1, 32, kernel_size=3),
             nn.MaxPool2d(kernel_size=2),
             nn.ReLU(),
-            nn.Conv2d(32, 64, kernel_size=2),
+            nn.Conv2d(32, 64, kernel_size=3),
             nn.MaxPool2d(kernel_size=2),
             nn.ReLU()
 
@@ -86,15 +101,33 @@ class TwoBranch(nn.Module):
         return x
 
     def forward(self, x):
+        """
+            Defines a PyTorch convolutional classification network model 
+            with two branches, operating independently on each image.
+
+            Parameters
+            ----------
+            self : 
+                The class instance
+            x    :
+                The input of dimension [mini_batch_size, 2, 14, 14]
+
+            Returns
+            -------
+
+            output    : A Tensor of dimension [mini_batch_size] with the prediction values
+        """
+        # Change input dimensions to separate image couple
+        # and to match with Convolutional layer dimensions
         output_1 = self.forward_first(x[:, 0, None])
         output_2 = self.forward_second(x[:, 1, None])
         output = (output_2 - output_1).view(-1)
         return output
 
 
-class TwoBranchWeightSharing(nn.Module):
+class WeightSharingBranchesModel(nn.Module):
     def __init__(self, nb_hidden=128):
-        super(TwoBranchWeightSharing, self).__init__()
+        super(WeightSharingBranchesModel, self).__init__()
 
         # Convolutional layers in each branch
         self.cnn_single = nn.Sequential(
@@ -126,15 +159,33 @@ class TwoBranchWeightSharing(nn.Module):
         return x
 
     def forward(self, x):
+        """
+            Defines a PyTorch convolutional classification network model 
+            with two branches and weight sharing.
+
+            Parameters
+            ----------
+            self : 
+                The class instance
+            x    :
+                The input of dimension [mini_batch_size, 2, 14, 14]
+
+            Returns
+            -------
+
+            output   : A Tensor of dimension [mini_batch_size] with the prediction values
+        """
+        # Change input dimensions to separate image couple
+        # and to match with Convolutional layer dimensions
         output_1 = self.forward_single(x[:, 0, None])
         output_2 = self.forward_single(x[:, 1, None])
         output = (output_2 - output_1).view(-1)
         return output
 
 
-class TwoBranchSecond(nn.Module):
+class BranchesToVecModel(nn.Module):
     def __init__(self, nb_hidden=128):
-        super(TwoBranchSecond, self).__init__()
+        super(BranchesToVecModel, self).__init__()
 
         # Convolutional layers on the first branch
         self.cnn_first = nn.Sequential(
@@ -161,10 +212,10 @@ class TwoBranchSecond(nn.Module):
         # Convolutional layers on the second branch
         self.cnn_second = nn.Sequential(
 
-            nn.Conv2d(1, 32, kernel_size=5),
+            nn.Conv2d(1, 32, kernel_size=3),
             nn.MaxPool2d(kernel_size=2),
             nn.ReLU(),
-            nn.Conv2d(32, 64, kernel_size=2),
+            nn.Conv2d(32, 64, kernel_size=3),
             nn.MaxPool2d(kernel_size=2),
             nn.ReLU()
 
@@ -196,6 +247,26 @@ class TwoBranchSecond(nn.Module):
         return x
 
     def forward(self, x):
+        """
+            Defines a PyTorch convolutional classification network model 
+            with two branches, operating independently on each image.
+            The result of each branch is a vector of length 10.
+            After concatenation, linear layers give the desired prediction.
+
+            Parameters
+            ----------
+            self : 
+                The class instance
+            x    :
+                The input of dimension [mini_batch_size, 2, 14, 14]
+
+            Returns
+            -------
+
+            output    : A Tensor of dimension [mini_batch_size] with the prediction values
+        """
+        # Change input dimensions to separate image couple
+        # and to match with Convolutional layer dimensions
         output_1 = self.forward_first(x[:, 0, None])
         output_2 = self.forward_second(x[:, 1, None])
         output = torch.cat((output_1, output_2), 1)
@@ -204,9 +275,9 @@ class TwoBranchSecond(nn.Module):
         return output
 
 
-class TwoBranchSecondWeightSharing(nn.Module):
+class WeightSharingBranchesToVecModel(nn.Module):
     def __init__(self, nb_hidden=128):
-        super(TwoBranchSecondWeightSharing, self).__init__()
+        super(WeightSharingBranchesToVecModel, self).__init__()
 
         # Convolutional layers in each branch
         self.cnn_single = nn.Sequential(
@@ -240,6 +311,26 @@ class TwoBranchSecondWeightSharing(nn.Module):
         return x
 
     def forward(self, x):
+        """
+            Defines a PyTorch convolutional classification network model 
+            with two branches and weight sharing.
+            The result of each branch is a vector of length 10.
+            After concatenation, linear layers give the desired prediction.
+            
+            Parameters
+            ----------
+            self : 
+                The class instance
+            x    :
+                The input of dimension [mini_batch_size, 2, 14, 14]
+
+            Returns
+            -------
+
+            output    : A Tensor of dimension [mini_batch_size] with the prediction values
+        """
+        # Change input dimensions to separate image couple
+        # and to match with Convolutional layer dimensions
         output_1 = self.forward_single(x[:, 0, None])
         output_2 = self.forward_single(x[:, 1, None])
         output = torch.cat((output_1, output_2), 1)
@@ -248,9 +339,9 @@ class TwoBranchSecondWeightSharing(nn.Module):
         return output
 
 
-class TwoBranchSecondWeightSharingAuxiliaryLoss(nn.Module):
+class WeightSharingAuxiliaryModel(nn.Module):
     def __init__(self, nb_hidden=128):
-        super(TwoBranchSecondWeightSharingAuxiliaryLoss, self).__init__()
+        super(WeightSharingAuxiliaryModel, self).__init__()
 
         # Convolutional layers in each branch
         self.cnn_single = nn.Sequential(
@@ -284,6 +375,29 @@ class TwoBranchSecondWeightSharingAuxiliaryLoss(nn.Module):
         return x
 
     def forward(self, x):
+        """
+            Defines a PyTorch convolutional classification network model 
+            with two branches and weight sharing.
+            The result of each branch is tensor of dimenions [mini_batch_size, 256].
+            After concatenation, linear layers give the desired prediction
+            and a vector of length 10 for each image.
+            
+            Parameters
+            ----------
+            self : 
+                The class instance
+            x    :
+                The input of dimension [mini_batch_size, 2, 14, 14]
+
+            Returns
+            -------
+
+            output_comparison    : A Tensor of dimension [mini_batch_size] with the prediction values
+            output_first_digit   : A tensor of dimensions [mini_batch_size, 10] with the class probability distribution for the first image
+            output_second_digit  : A tensor of dimensions [mini_batch_size, 10] with the class probability distribution for the second image
+        """
+        # Change input dimensions to separate image couple
+        # and to match with Convolutional layer dimensions
         output_1 = self.forward_single(x[:, 0, None])
         output_2 = self.forward_single(x[:, 1, None])
         output = torch.cat((output_1, output_2), 1)
@@ -295,9 +409,9 @@ class TwoBranchSecondWeightSharingAuxiliaryLoss(nn.Module):
         return output_comparison, output_first_digit, output_second_digit
 
 
-class DirectClassification(nn.Module):
+class DirectClassificationModel(nn.Module):
     def __init__(self, nb_hidden=128):
-        super(DirectClassification, self).__init__()
+        super(DirectClassificationModel, self).__init__()
 
         self.conv1 = nn.Conv2d(1, 32, kernel_size=3)
         self.conv2 = nn.Conv2d(32, 64, kernel_size=3)
@@ -312,4 +426,21 @@ class DirectClassification(nn.Module):
         return self.fc2(x).view(-1, 10)
 
     def forward(self, x):
+        """
+            Defines a PyTorch convolutional classification network model 
+            that directly classifies the digit represented in each image.
+            
+            Parameters
+            ----------
+            self : 
+                The class instance
+            x    :
+                The input of dimension [mini_batch_size, 2, 14, 14]
+
+            Returns
+            -------
+            x    : 
+                A tensor of dimensions [2*mini_batch_size, 10] with the class probability distribution for the images
+            
+        """
         return self.forward_single(x.reshape(-1, 1, *x.shape[2:]))

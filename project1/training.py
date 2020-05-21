@@ -6,7 +6,10 @@ from metrics import compute_accuracy, compute_accuracy_classification
 from utils import EarlyStopping
 
 
-def train_model(model, train, val, mini_batch_size=100, lr=1e-3, nb_epochs=20, patience=3, **kwargs):
+# Training function giving directly the desired prediction,
+# Used for networks : TwoChannelsModel, TwoBranchesModel, WeightSharingBranchesModel, BranchesToVecModel, WeightSharingBranchesToVecModel
+
+def train_pred(model, train, val, mini_batch_size=100, lr=3e-4, nb_epochs=100, patience=20, **kwargs):
     """
         Train the PyTorch model on the training set.
 
@@ -14,8 +17,10 @@ def train_model(model, train, val, mini_batch_size=100, lr=1e-3, nb_epochs=20, p
         ----------
         model : PyTorch NN object
             PyTorch neural network model
-        train : train dataset
-        val : validation dataset
+        train : TensorDataset
+            Dataset containing inputs, targets, classes for training (train_inner)
+        val : TensorDataset
+            Dataset containing inputs, targets, classes for validation
         mini_batch_size : int
             The size of the batch processing size
         lr : float
@@ -42,11 +47,13 @@ def train_model(model, train, val, mini_batch_size=100, lr=1e-3, nb_epochs=20, p
     # Defining the early stopping criterion
     early_stopping = EarlyStopping(patience)
 
-    # Defining dataloaders
+    # Defining DataLoaders for better mini-batches handling
+    # Shuffling makes batches differ between epochs and results in more robust training
     train_loader = DataLoader(train, mini_batch_size, shuffle=True)
 
     # Learning loop
     for e in range(nb_epochs):
+        
         # Train the input dataset by dividing it into mini_batch_size small datasets
         for train_input, train_target, _ in train_loader:
             output = model(train_input)
@@ -58,14 +65,19 @@ def train_model(model, train, val, mini_batch_size=100, lr=1e-3, nb_epochs=20, p
             train_losses.append(loss)
         val_accs.append(compute_accuracy(model, val, mini_batch_size))
 
+        # If the validation accuracy has not improved enough in the last patience epochs
+        # then stop training
         if early_stopping(val_accs[-1]):
             break
 
     return model, train_losses, val_accs
 
 
-def train_model_auxiliary(model, train, val, auxiliary_weight=1., mini_batch_size=100,
-                          lr=1e-3, nb_epochs=20, patience=3, **kwargs):
+# Training function giving the desired prediction and the labels of the two digits
+# Used for network: WeightSharingAuxiliaryModel 
+
+def train_pred_labels(model, train, val, auxiliary_weight=1., mini_batch_size=100,
+                          lr=3e-4, nb_epochs=100, patience=20, **kwargs):
     """
         Train the PyTorch model on the training set.
 
@@ -73,8 +85,10 @@ def train_model_auxiliary(model, train, val, auxiliary_weight=1., mini_batch_siz
         ----------
         model : PyTorch NN object
             PyTorch neural network model
-        train : train dataset
-        val : validation dataset
+        train : TensorDataset
+            Dataset containing inputs, targets, classes for training (train_inner)
+        val : TensorDataset
+            Dataset containing inputs, targets, classes for validation
         auxiliary_weight: float
             Weight of auxiliary loss
         mini_batch_size : int
@@ -97,14 +111,15 @@ def train_model_auxiliary(model, train, val, auxiliary_weight=1., mini_batch_siz
     # Defining the optimizer for GD
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 
-    # Defining the criterion to calculate loss
-    criterion = nn.BCEWithLogitsLoss()
-    criterion_digit = nn.CrossEntropyLoss()
+    # Defining the criteria to calculate losses
+    criterion = nn.BCEWithLogitsLoss()         # for Binary Classification
+    criterion_digit = nn.CrossEntropyLoss()    # for MultiClass Classification
 
     # Defining the early stopping criterion
     early_stopping = EarlyStopping(patience)
 
-    # Defining dataloaders
+    # Defining DataLoaders for better mini-batches handling
+    # Shuffling makes batches differ between epochs and results in more robust training
     train_loader = DataLoader(train, mini_batch_size, shuffle=True)
 
     # Learning loop
@@ -124,14 +139,19 @@ def train_model_auxiliary(model, train, val, auxiliary_weight=1., mini_batch_siz
             train_losses.append(loss.item())
         val_accs.append(compute_accuracy(model, val, mini_batch_size))
 
+        # If the validation accuracy has not improved enough in the last patience epochs
+        # then stop training
         if early_stopping(val_accs[-1]):
             break
 
     return model, train_losses, val_accs
 
 
-def train_model_direct_classification(model, train, val, mini_batch_size=100,
-                                      lr=1e-3, nb_epochs=20, patience=3, **kwargs):
+# Training function giving the labels of the two digits
+# Used for network: DirectClassificationModel
+
+def train_labels(model, train, val, mini_batch_size=100,
+                     lr=3e-4, nb_epochs=100, patience=20, **kwargs):
     """
             Train the PyTorch model on the training set.
 
@@ -139,8 +159,10 @@ def train_model_direct_classification(model, train, val, mini_batch_size=100,
             ----------
             model : PyTorch NN object
                 PyTorch neural network model
-            train : train dataset
-            val : validation dataset
+            train : TensorDataset
+                Dataset containing inputs, targets, classes for training (train_inner)
+            val : TensorDataset
+                Dataset containing inputs, targets, classes for validation
             mini_batch_size : int
                 The size of the batch processing size
             lr : float
@@ -162,12 +184,13 @@ def train_model_direct_classification(model, train, val, mini_batch_size=100,
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 
     # Defining the criterion to calculate loss
-    criterion = nn.CrossEntropyLoss()
+    criterion = nn.CrossEntropyLoss()        
 
     # Defining the early stopping criterion
     early_stopping = EarlyStopping(patience)
 
-    # Defining dataloaders
+    # Defining DataLoaders for better mini-batches handling
+    # Shuffling makes batches differ between epochs and results in more robust training
     train_loader = DataLoader(train, mini_batch_size, shuffle=False)
 
     # Learning loop
@@ -184,6 +207,8 @@ def train_model_direct_classification(model, train, val, mini_batch_size=100,
 
         val_accs.append(compute_accuracy_classification(model, val, mini_batch_size))
 
+        # If the validation accuracy has not improved enough in the last patience epochs
+        # then stop training
         if early_stopping(val_accs[-1]):
             break
 

@@ -6,13 +6,12 @@ from training import *
 from metrics import *
 from dlc_practical_prologue import generate_pair_sets
 
-
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", default="DirectClassification", type=str)
+    parser.add_argument("--model", default="DirectClassificationModel", type=str)
     parser.add_argument("--nb_hidden", default=128, type=int)
-    parser.add_argument("--lr", default=0.0003, type=float)
-    parser.add_argument("--patience", default=20, type=int)
+    parser.add_argument("--lr", default=0.0003, type=float)             # Learning rate
+    parser.add_argument("--patience", default=20, type=int)             # A parameter for early stopping, see utils.py  
     parser.add_argument("--auxiliary_weight", default=1., type=float)
     parser.add_argument("--mini_batch_size", default=100, type=int)
     parser.add_argument("--nb_epochs", default=100, type=int)
@@ -25,49 +24,66 @@ def parse_args():
 
 
 def run(model_fn, train_fn, metric_fn, train, test, args):
+    
+    # Split train TensorDataset in proper train and validation TensorDatasets, respectively
+    # The dimensions were chosen to have still enough data to perform robust training
     train_inner, val = torch.utils.data.random_split(train, [800, 200])
+    
+    # Create the model
     model = model_fn(args.nb_hidden)
 
+    # Train it 
     model, train_losses, val_accs = train_fn(model=model, train=train_inner, val=val,
                                              mini_batch_size=args.mini_batch_size, nb_epochs=args.nb_epochs,
                                              lr=args.lr, patience=args.patience, auxiliary_weight=args.auxiliary_weight)
 
+    # Get statistics
     train_accuracy = metric_fn(model, train)
     test_accuracy = metric_fn(model, test)
-
+    
     return model, train_accuracy, test_accuracy
 
-
 def main(args):
-    if args.model == "DirectClassification":
-        model_fn = DirectClassification
-        train_fn = train_model_direct_classification
+    
+    # Associate to every model the corrisponding train and metric function
+    
+    if args.model == "DirectClassificationModel":
+        model_fn = DirectClassificationModel
+        train_fn = train_labels
         metric_fn = compute_accuracy_classification
-    elif args.model == "TwoBranchSecondWeightSharingAuxiliaryLoss":
-        model_fn = TwoBranchSecondWeightSharingAuxiliaryLoss
-        train_fn = train_model_auxiliary
+    elif args.model == "WeightSharingAuxiliaryModel":
+        model_fn = WeightSharingAuxiliaryModel
+        train_fn = train_pred_labels
         metric_fn = compute_accuracy
     else:
         model_fn = eval(args.model)
-        train_fn = train_model
+        train_fn = train_pred
         metric_fn = compute_accuracy
+        
 
+    # Store train and test accuracies over nb_rounds indipendent rounds
+    
     train_accs = []
     test_accs = []
+    val_accs_round = [] #MODIFIED
     for _ in range(args.nb_rounds):
+        
+        # Get the data
         train_inputs, train_targets, train_classes, test_inputs, test_targets, test_classes = generate_pair_sets(1000)
 
-        # Normalize the training sets
+        # Normalize the training sets - to have similar data distribution for every pixel
         mu, std = train_inputs.mean(), train_inputs.std()
         train_inputs.sub_(mu).div_(std)
 
-        # Normalize the test sets
+        # Normalize the test sets - - to have similar data distribution for every pixel
         test_inputs.sub_(mu).div_(std)
 
         train_targets, test_targets = train_targets.float(), test_targets.float()
+        
+        # TensorDataset (later coupled with DataLoader) used for better mini-batches handling 
         test = TensorDataset(test_inputs, test_targets, test_classes)
         train = TensorDataset(train_inputs, train_targets, train_classes)
-        _, train_acc, test_acc = run(model_fn, train_fn, metric_fn, train, test, args)
+        _, train_acc, test_acc = run(model_fn, train_fn, metric_fn, train, test, args) #modified
         train_accs.append(train_acc)
         test_accs.append(test_acc)
 
@@ -79,11 +95,14 @@ if __name__ == "__main__":
     torch.manual_seed(args.seed)
 
     train_accs, test_accs = main(args)
+    
+    # Convert lists to tensors and compute statistics
     train_acc_mean = torch.mean(torch.tensor(train_accs))
     train_acc_std = torch.std(torch.tensor(train_accs))
     test_acc_mean = torch.mean(torch.tensor(test_accs))
     test_acc_std = torch.std(torch.tensor(test_accs))
-
+    
+    
     print(f"Estimated using {args.nb_rounds} independent rounds:")
     print(f"Train accuracy: mean={train_acc_mean}, std={train_acc_std}")
     print(f"Test accuracy: mean={test_acc_mean}, std={test_acc_std}")
