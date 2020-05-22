@@ -76,7 +76,7 @@ class Linear(Module):
         """
         
         # Accumulating gradient wrt to parameters across N samples
-        self.gradW += (self.input[:, None, :] * gradwrtoutput[:, :, None]).sum(axis=0)
+        self.gradW += gradwrtoutput.T @ self.input
         self.gradb += gradwrtoutput.sum(axis=0)
 
         return gradwrtoutput @ self.W
