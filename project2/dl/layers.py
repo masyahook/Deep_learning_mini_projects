@@ -4,7 +4,7 @@ from .module import Module
 
 class Linear(Module):
     """
-        Class for Linear Module that applies linear transformation to the input data: y = x*A^T + b.
+        Class for Linear Module that applies linear transformation to the input data: y = x*W^T + b.
         
         Parameters
         ----------
@@ -18,8 +18,6 @@ class Linear(Module):
             The gradient wrt to bias parameters
         input : Torch tensor of size (N, n_in)
             Input tensor 
-        target : Torch tensor of size (N, n_out)
-            Target tensor 
     """
     
     def __init__(self, n_in, n_out):
