@@ -34,13 +34,16 @@ def main(n_epochs=200, batch_size=100, seed=42):
         dl.ReLU(),
         dl.Linear(25, 25),
         dl.ReLU(),
+        dl.Dropout(0.3),
         dl.Linear(25, 25),
-        dl.ReLU(),
-        dl.Linear(25, 1)
+        dl.Dropout(0.5),
+        dl.Tanh(),
+        dl.Linear(25, 1),
+        dl.Sigmoid()
     ])
     
     # Defining the MSE loss
-    loss = dl.LossMSE()
+    loss = dl.LossBCE()
     
     # Defining the SGD optimizer
     opt = dl.SGD(model.param(), lr=0.1)
