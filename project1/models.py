@@ -4,13 +4,15 @@ from torch.nn import functional as F
 
 
 class TwoChannelsModel(nn.Module):
-    def __init__(self, nb_hidden=128):
+    def __init__(self, nb_hidden=128, dropout=0.0):
         super(TwoChannelsModel, self).__init__()
         self.conv1 = nn.Conv2d(2, 32, kernel_size=3)
         self.conv2 = nn.Conv2d(32, 64, kernel_size=3)
         self.fc1 = nn.Linear(256, nb_hidden)
         self.fc2 = nn.Linear(nb_hidden, 10)
         self.fc3 = nn.Linear(10, 1)
+
+        self.dropout = dropout
 
     def forward(self, x):
         """
@@ -31,7 +33,9 @@ class TwoChannelsModel(nn.Module):
         x = F.relu(F.max_pool2d(self.conv1(x), kernel_size=2))
         x = F.relu(F.max_pool2d(self.conv2(x), kernel_size=2))
         x = x.view(x.size(0), -1)
+        x = F.dropout(x, self.dropout)
         x = F.relu(self.fc1(x))
+        x = F.dropout(x, self.dropout)
         x = F.relu(self.fc2(x))
         x = self.fc3(x).view(-1)
 
@@ -39,7 +43,7 @@ class TwoChannelsModel(nn.Module):
 
 
 class TwoBranchesModel(nn.Module):
-    def __init__(self, nb_hidden=128):
+    def __init__(self, nb_hidden=128, dropout=0.0):
         super(TwoBranchesModel, self).__init__()
 
         # Convolutional layers on the first branch
@@ -56,18 +60,17 @@ class TwoBranchesModel(nn.Module):
 
         # Fully-connected layers on the first branch
         self.fc_first = nn.Sequential(
-
+            nn.Dropout(dropout),
             nn.Linear(256, nb_hidden),
             nn.ReLU(),
+            nn.Dropout(dropout),
             nn.Linear(nb_hidden, 10),
             nn.ReLU(),
             nn.Linear(10, 1)
-
         )
 
         # Convolutional layers on the second branch
         self.cnn_second = nn.Sequential(
-
             nn.Conv2d(1, 32, kernel_size=3),
             nn.MaxPool2d(kernel_size=2),
             nn.ReLU(),
@@ -79,9 +82,10 @@ class TwoBranchesModel(nn.Module):
 
         # Fully-connected layers on the second branch
         self.fc_second = nn.Sequential(
-
+            nn.Dropout(dropout),
             nn.Linear(256, nb_hidden),
             nn.ReLU(),
+            nn.Dropout(dropout),
             nn.Linear(nb_hidden, 10),
             nn.ReLU(),
             nn.Linear(10, 1)
@@ -126,12 +130,11 @@ class TwoBranchesModel(nn.Module):
 
 
 class WeightSharingBranchesModel(nn.Module):
-    def __init__(self, nb_hidden=128):
+    def __init__(self, nb_hidden=128, dropout=0.0):
         super(WeightSharingBranchesModel, self).__init__()
 
         # Convolutional layers in each branch
         self.cnn_single = nn.Sequential(
-
             nn.Conv2d(1, 32, kernel_size=3),
             nn.MaxPool2d(kernel_size=2),
             nn.ReLU(),
@@ -143,9 +146,10 @@ class WeightSharingBranchesModel(nn.Module):
 
         # Fully-connected layers in each branch
         self.fc_single = nn.Sequential(
-
+            nn.Dropout(dropout),
             nn.Linear(256, nb_hidden),
             nn.ReLU(),
+            nn.Dropout(dropout),
             nn.Linear(nb_hidden, 10),
             nn.ReLU(),
             nn.Linear(10, 1)
@@ -184,12 +188,11 @@ class WeightSharingBranchesModel(nn.Module):
 
 
 class BranchesToVecModel(nn.Module):
-    def __init__(self, nb_hidden=128):
+    def __init__(self, nb_hidden=128, dropout=0.0):
         super(BranchesToVecModel, self).__init__()
 
         # Convolutional layers on the first branch
         self.cnn_first = nn.Sequential(
-
             nn.Conv2d(1, 32, kernel_size=3),
             nn.MaxPool2d(kernel_size=2),
             nn.ReLU(),
@@ -201,9 +204,10 @@ class BranchesToVecModel(nn.Module):
 
         # Fully-connected layers on the first branch
         self.fc_first = nn.Sequential(
-
+            nn.Dropout(dropout),
             nn.Linear(256, nb_hidden),
             nn.ReLU(),
+            nn.Dropout(dropout),
             nn.Linear(nb_hidden, 10),
             nn.ReLU(),
 
@@ -211,7 +215,6 @@ class BranchesToVecModel(nn.Module):
 
         # Convolutional layers on the second branch
         self.cnn_second = nn.Sequential(
-
             nn.Conv2d(1, 32, kernel_size=3),
             nn.MaxPool2d(kernel_size=2),
             nn.ReLU(),
@@ -223,9 +226,10 @@ class BranchesToVecModel(nn.Module):
 
         # Fully-connected layers on the second branch
         self.fc_second = nn.Sequential(
-
+            nn.Dropout(dropout),
             nn.Linear(256, nb_hidden),
             nn.ReLU(),
+            nn.Dropout(dropout),
             nn.Linear(nb_hidden, 10),
             nn.ReLU(),
 
@@ -276,12 +280,11 @@ class BranchesToVecModel(nn.Module):
 
 
 class WeightSharingBranchesToVecModel(nn.Module):
-    def __init__(self, nb_hidden=128):
+    def __init__(self, nb_hidden=128, dropout=0.0):
         super(WeightSharingBranchesToVecModel, self).__init__()
 
         # Convolutional layers in each branch
         self.cnn_single = nn.Sequential(
-
             nn.Conv2d(1, 32, kernel_size=3),
             nn.MaxPool2d(kernel_size=2),
             nn.ReLU(),
@@ -293,9 +296,10 @@ class WeightSharingBranchesToVecModel(nn.Module):
 
         # Fully-connected layers in each branch
         self.fc_single = nn.Sequential(
-
+            nn.Dropout(dropout),
             nn.Linear(256, nb_hidden),
             nn.ReLU(),
+            nn.Dropout(dropout),
             nn.Linear(nb_hidden, 10),
             nn.ReLU(),
 
@@ -340,12 +344,11 @@ class WeightSharingBranchesToVecModel(nn.Module):
 
 
 class WeightSharingAuxiliaryModel(nn.Module):
-    def __init__(self, nb_hidden=128):
+    def __init__(self, nb_hidden=128, dropout=0.0):
         super(WeightSharingAuxiliaryModel, self).__init__()
 
         # Convolutional layers in each branch
         self.cnn_single = nn.Sequential(
-
             nn.Conv2d(1, 32, kernel_size=3),
             nn.MaxPool2d(kernel_size=2),
             nn.ReLU(),
@@ -357,9 +360,10 @@ class WeightSharingAuxiliaryModel(nn.Module):
 
         # Fully-connected layers in each branch
         self.fc_single = nn.Sequential(
-
+            nn.Dropout(dropout),
             nn.Linear(256, nb_hidden),
             nn.ReLU(),
+            nn.Dropout(dropout),
 
         )
 
@@ -410,7 +414,7 @@ class WeightSharingAuxiliaryModel(nn.Module):
 
 
 class DirectClassificationModel(nn.Module):
-    def __init__(self, nb_hidden=128):
+    def __init__(self, nb_hidden=128, dropout=0.0):
         super(DirectClassificationModel, self).__init__()
 
         self.conv1 = nn.Conv2d(1, 32, kernel_size=3)
@@ -418,11 +422,15 @@ class DirectClassificationModel(nn.Module):
         self.fc1 = nn.Linear(256, nb_hidden)
         self.fc2 = nn.Linear(nb_hidden, 10)
 
+        self.dropout = dropout
+
     def forward_single(self, x):
         x = F.relu(F.max_pool2d(self.conv1(x), kernel_size=2))
         x = F.relu(F.max_pool2d(self.conv2(x), kernel_size=2))
         x = x.view(x.size(0), -1)
+        x = F.dropout(x, self.dropout)
         x = F.relu(self.fc1(x))
+        x = F.dropout(x, self.dropout)
         return self.fc2(x).view(-1, 10)
 
     def forward(self, x):

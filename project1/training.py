@@ -2,7 +2,7 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 from torch.utils.data import DataLoader
-from metrics_drop import compute_accuracy, compute_accuracy_classification
+from metrics import compute_accuracy, compute_accuracy_classification
 from utils import EarlyStopping
 
 
@@ -53,7 +53,7 @@ def train_pred(model, train, val, mini_batch_size=100, lr=3e-4, nb_epochs=100, p
 
     # Learning loop
     for e in range(nb_epochs):
-        
+        model.train()
         # Train the input dataset by dividing it into mini_batch_size small datasets
         for train_input, train_target, _ in train_loader:
             output = model(train_input)
@@ -63,6 +63,7 @@ def train_pred(model, train, val, mini_batch_size=100, lr=3e-4, nb_epochs=100, p
             optimizer.step()
 
             train_losses.append(loss)
+        model.eval()
         val_accs.append(compute_accuracy(model, val, mini_batch_size))
 
         # If the validation accuracy has not improved enough in the last patience epochs

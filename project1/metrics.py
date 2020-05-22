@@ -1,5 +1,6 @@
 from torch.utils.data import DataLoader
 
+
 # Used for all Models but DirectClassificationModel
 def compute_accuracy(model, data, mini_batch_size=100):
     """
@@ -19,6 +20,7 @@ def compute_accuracy(model, data, mini_batch_size=100):
         float
             The accuracy of the model
     """
+    model.eval()
     loader = DataLoader(data, mini_batch_size)
     nb_errors = 0
 
@@ -52,6 +54,7 @@ def compute_accuracy_classification(model, data, mini_batch_size=100):
         float
             The accuracy of the model
     """
+    model.eval()
     loader = DataLoader(data, mini_batch_size)
     nb_errors = 0
 
